@@ -8,6 +8,7 @@ import java.io.File
 object Entry extends App{
   import ParserActorMsg._
   import ErrorMsg._
+  import TimerMsg._
 
   val timerLoc = "E:\\Allen\\timer.txt"
 
@@ -23,13 +24,18 @@ object Entry extends App{
 
   val file = scala.io.Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8") //300mb in memory now
 
+//  timer ! TotalTask(3386)
+  timer ! TotalTask(16)
+
   var lineCount = 0
 
   file.getLines().map { line =>
     val segs = line.split("\t")
     if (segs.length > 2) error ! Warning("this line contains tab space inside sentences: " + segs(0))
     listOfParsers(lineCount % 10) ! Parse(segs(0), segs(1))
+    lineCount += 1
   }
+
 }
 
 

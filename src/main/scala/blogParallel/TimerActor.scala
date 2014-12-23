@@ -36,10 +36,6 @@ class TimerActor(timerLoc: String) extends Actor with ActorLogging {
       currentTime = System.currentTimeMillis()
       if (currentPatternProgress % 10 == 0) printToFile()
 
-    case SoloAddOne =>
-      currentSoloTasks += 1
-      currentTime = System.currentTimeMillis()
-      if (currentSoloTasks % 10 == 0) printToFileSolo()
   }
 
   def printToFile() {
@@ -66,5 +62,4 @@ object TimerMsg {
 
   case object PCFGAddOne
   case object PatternAddOne
-  case object SoloAddOne
 }
