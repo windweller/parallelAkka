@@ -100,16 +100,6 @@ object Entry extends App {
 
   readListByCountry(inputFileLoc,outputFileLoc)
 
-  // val listofCountry = Map(
-  //   "Nigeria" -> "E:\\Tweets\\2013Nigeria10000clean.csv",
-  //   "Pakistan" -> "E:\\Tweets\\2013Pakistan10000clean.csv",
-  //   "Australia" -> "E:\\Tweets\\2013Australia10000clean.csv",
-  //   "England" -> "E:\\Tweets\\2013England10000clean.csv",
-  //   "India" -> "E:\\Tweets\\2013India10000clean.csv",
-  //   "NewZealand" -> "E:\\Tweets\\2013NewZealand10000clean.csv",
-  //   "Philippines" -> "E:\\Tweets\\2013Philippines10000clean.csv"
-  // )
-
   /**
    * Type-safe Utility function
    */

@@ -7,7 +7,7 @@ version := "1.0"
 scalaVersion := "2.10.2"
 
 //mainClass in (Compile, run) := Some("clearNLP.DemoNLPDecode")
-mainClass in (Compile, run) := Some("DataTransform.Entry")
+mainClass in (Compile, run) := Some("blogParallel.Entry")
 
 val buildSettings = Defaults.defaultSettings ++ Seq(
   javaOptions += "-Xmx2G -Xms4G"
