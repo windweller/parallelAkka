@@ -25,6 +25,8 @@ class ParserActor(timer: ActorRef, tregexActor: ActorRef, lp: LexicalizedParser)
       val segs = name.split("""\.""").dropRight(1).toList :+ date
       val sentenceList = CollectionHandler.buildListStringFromListHasWord(sen)
 
+      timer ! UpdatePatternTask(sentenceList.length)
+
       (0 to sentenceList.length - 1).map{ n =>
         tregexActor ! Match(segs :+ sentenceList(n), parsedSentence(n))
       }

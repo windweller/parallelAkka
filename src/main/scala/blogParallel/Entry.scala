@@ -24,9 +24,9 @@ object Entry extends App{
 
   val lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz", "-MAX_ITEMS","500000") //, "-nthreads", "5"
 
-  val listOfTregexActors = (0 to 9).map(m => system.actorOf(Props(new TregexActor(timer, filePrinter)), "TregexActor" + m))
-  val listOfParsers = (0 to 9).map(n => system.actorOf(Props(new ParserActor(timer, listOfTregexActors(n), lp)), "ParserActor" + n))
-  val listOfSentenceSplitters = (0 to 9).map(j => system.actorOf(Props(new SentenceSplitterActor(listOfParsers(j), timer)), "SplitActor" + j))
+  val listOfTregexActors = (0 to 5).map(m => system.actorOf(Props(new TregexActor(timer, filePrinter)), "TregexActor" + m))
+  val listOfParsers = (0 to 5).map(n => system.actorOf(Props(new ParserActor(timer, listOfTregexActors(n), lp)), "ParserActor" + n))
+  val listOfSentenceSplitters = (0 to 5).map(j => system.actorOf(Props(new SentenceSplitterActor(listOfParsers(j), timer)), "SplitActor" + j))
 
   Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV.csv"), List("id", "gender", "age", "occupation", "star_sign", "date", "blog_entry", "parsed"))
   val xmlHandler = XMLHandler("E:\\Jason\\blogs_test")
@@ -38,7 +38,7 @@ object Entry extends App{
   var entryCount = 0
   listOfFiles.map{ ft =>
     ft._2.map{ eachEntry =>
-      listOfSentenceSplitters(entryCount % 10) ! Post(ft._1, eachEntry._1, eachEntry._2)
+      listOfSentenceSplitters(entryCount % 6) ! Post(ft._1, eachEntry._1, eachEntry._2)
       entryCount += 1
     }
   }

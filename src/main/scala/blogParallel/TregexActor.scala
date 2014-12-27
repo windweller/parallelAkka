@@ -22,7 +22,6 @@ class TregexActor(timer: ActorRef, filePrinter: ActorRef) extends Actor with Act
     val statsFuture = search(patternFuture, tree)
     val statsPast = search(patternsPast, tree)
 
-    timer ! PatternAddOne
     List(statsFuture, statsPast)
   }
 
@@ -35,6 +34,7 @@ class TregexActor(timer: ActorRef, filePrinter: ActorRef) extends Actor with Act
       if (matcher.find()) {
         stats(i) = stats(i) + 1
       }
+      timer ! PatternAddOne
     }
     stats
   }

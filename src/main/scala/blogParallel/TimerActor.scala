@@ -10,11 +10,9 @@ class TimerActor(timerLoc: String) extends Actor with ActorLogging {
 
   var totalPCFGTasks = 0
   var totalPatternTasks = 0
-  var totalSoloTasks = 0
 
   var currentPCFGProgress = 0.0
   var currentPatternProgress = 0.0
-  var currentSoloTasks = 0.0
 
   val startTime: Long = System.currentTimeMillis()
   var currentTime: Long = 0
@@ -25,7 +23,10 @@ class TimerActor(timerLoc: String) extends Actor with ActorLogging {
   def receive = {
     case TotalTask(num) =>
       totalPCFGTasks = num
-      totalPatternTasks = num * (patternFuture.size + patternsPast.size)
+
+    case UpdatePatternTask(num) =>
+      totalPatternTasks += num * (patternFuture.size + patternsPast.size)
+
     case PCFGAddOne =>
       currentPCFGProgress += 1
       currentTime = System.currentTimeMillis()
@@ -40,25 +41,20 @@ class TimerActor(timerLoc: String) extends Actor with ActorLogging {
 
   def printToFile() {
     val writer = new PrintWriter(timerLoc, "UTF-8")
-    writer.println("PCFGProgress: "+currentPCFGProgress + " => " + percentFormat.format(currentPCFGProgress/totalPCFGTasks))
-    writer.println("PatternProgress: "+currentPatternProgress + " => " + percentFormat.format(currentPatternProgress/totalPatternTasks))
-    val expectedSecs = ((currentTime - startTime) / (currentPatternProgress + currentPCFGProgress)) * (totalPatternTasks + totalPCFGTasks - currentPatternProgress - currentPCFGProgress)
+    writer.println("PCFGProgress: "+currentPCFGProgress + " / " + totalPCFGTasks + " => " + percentFormat.format(currentPCFGProgress/totalPCFGTasks))
+    writer.println("PatternProgress: "+currentPatternProgress + " / " + totalPatternTasks + " => " + percentFormat.format(currentPatternProgress/totalPatternTasks))
+    val expectedSecs = ((currentTime - startTime) / currentPCFGProgress) * (totalPCFGTasks - currentPCFGProgress)
+
     writer.println("Spent Time: "+ ((currentTime - startTime)/1000) + "s expected time: " + (expectedSecs/1000) + "s")
     writer.close()
   }
 
-  def printToFileSolo() {
-    val writer = new PrintWriter(timerLoc, "UTF-8")
-    writer.println("PCFGProgress: "+currentSoloTasks + " => " + percentFormat.format(currentSoloTasks/totalSoloTasks))
-    val expectedSecs = ((currentTime - startTime) / currentSoloTasks) * (totalSoloTasks - currentSoloTasks)
-    writer.println("Spent Time: "+ ((currentTime - startTime)/1000) + "s expected time: " + (expectedSecs/1000) + "s")
-    writer.close()
-  }
 }
 
 object TimerMsg {
 
   case class TotalTask(numberOfRows: Int)
+  case class UpdatePatternTask(newTask: Int)
 
   case object PCFGAddOne
   case object PatternAddOne

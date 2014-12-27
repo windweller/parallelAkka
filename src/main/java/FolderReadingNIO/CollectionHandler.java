@@ -17,19 +17,20 @@ public class CollectionHandler {
     public static ArrayList<String> buildListStringFromListHasWord(List<List<HasWord>> listHasWord) {
 
         ArrayList<String> sentenceList = new ArrayList<String>();
-        StringBuilder sentenceSb = new StringBuilder();
-        Iterator<List<HasWord>> it = listHasWord.iterator();
 
-        List<HasWord> sentence = it.next();
+        for (List<HasWord> sentence : listHasWord) {
 
-        for (HasWord token : sentence) {
-            if(sentenceSb.length()>1) {
-                sentenceSb.append(" ");
+            StringBuilder sentenceSb = new StringBuilder();
+
+            for (HasWord token : sentence) {
+                if (sentenceSb.length() > 1) {
+                    sentenceSb.append(" ");
+                }
+                sentenceSb.append(token);
             }
-            sentenceSb.append(token);
-        }
 
-        sentenceList.add(sentenceSb.toString());
+            sentenceList.add(sentenceSb.toString());
+        }
 
         return sentenceList;
     }
