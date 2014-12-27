@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-slf4j" % "2.3.2",
   "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.3",
   "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3",
-  "org.scalatest" %% "scalatest" % "1.9.1" % "test",
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "com.typesafe.slick" %% "slick" % "2.0.1",
   "mysql" % "mysql-connector-java" % "5.1.12",
   "org.scalaj" %% "scalaj-http" % "0.3.15",
@@ -29,7 +29,8 @@ libraryDependencies ++= Seq(
   "commons-net" % "commons-net" % "3.3",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1",
   "commons-cli" % "commons-cli" % "1.2",
-  //Clear NLP - core
+  "org.ccil.cowan.tagsoup" % "tagsoup" % "1.2.1",
+//Clear NLP - core
   "com.clearnlp" % "clearnlp" % "2.0.2",
   "com.clearnlp" % "clearnlp-dictionary" % "1.0",
   //Clear NLP - English Dependency Parsing

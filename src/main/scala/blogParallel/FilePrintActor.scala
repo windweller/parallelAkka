@@ -20,6 +20,7 @@ class FilePrintActor(f: File) extends Actor with ActorLogging  {
 
     writer.writeRow(row:::result.flatten.toList)
     writer.close()
+    println("File writing finished")
   }
 
 }

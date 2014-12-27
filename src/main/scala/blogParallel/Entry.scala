@@ -1,14 +1,20 @@
 package blogParallel
 
 import akka.actor._
+import com.github.tototoshi.csv.CSVWriter
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import java.io.File
 
+import scala.io.Source
+
 //You need at least 60GB memory to run this program
 object Entry extends App{
+  import Pattern._
   import ParserActorMsg._
   import ErrorMsg._
   import TimerMsg._
+
+  /* Initialization Phase */
 
   val timerLoc = "E:\\Allen\\timer.txt"
 
@@ -17,24 +23,29 @@ object Entry extends App{
   val error = system.actorOf(Props(new ErrorActor("E:\\Allen\\Error.txt")), "Error")
   val filePrinter = system.actorOf(Props(new FilePrintActor(new File("E:\\Jason\\blogFinishedCSV.csv"))), "filePrinter")
 
-  val lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz", "-MAX_ITEMS","500000")
+  val lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz", "-MAX_ITEMS","500000") //, "-nthreads", "5"
 
-  val listOfTregexActors = (1 to 10).map(m => system.actorOf(Props(new TregexActor(timer, filePrinter)), "TregexActor" + m)).toList
-  val listOfParsers = (1 to 10).map(n => system.actorOf(Props(new ParserActor(timer, listOfTregexActors(n), lp)), "ParserActor" + n)).toList
+  val listOfTregexActors = (0 to 5).map(m => system.actorOf(Props(new TregexActor(timer, filePrinter)), "TregexActor" + m))
+  val listOfParsers = (0 to 5).map(n => system.actorOf(Props(new ParserActor(timer, listOfTregexActors(n), lp)), "ParserActor" + n))
 
   val file = scala.io.Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8") //300mb in memory now
 
 //  timer ! TotalTask(3386)
   timer ! TotalTask(16)
 
-  var lineCount = 0
+  /* Execution Phase */
 
-  file.getLines().map { line =>
-    val segs = line.split("\t")
-    if (segs.length > 2) error ! Warning("this line contains tab space inside sentences: " + segs(0))
-    listOfParsers(lineCount % 10) ! Parse(segs(0), segs(1))
-    lineCount += 1
+  Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV.csv"), List("id", "gender", "age", "occupation", "star_sign", "blog_entry", "parsed"))
+
+  //legacy code, delete it
+  var lineCount = 0
+  for (line <- Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8").getLines()) {
+      val segs = line.split("\t")
+      if (segs.length > 2) error ! Warning("this line contains tab space inside sentences: " + segs(0))
+      listOfParsers(lineCount % 6) ! Parse(segs(0), segs(1))
+      lineCount += 1
   }
+
 
 }
 

@@ -13,6 +13,7 @@ class TregexActor(timer: ActorRef, filePrinter: ActorRef) extends Actor with Act
 
   def receive = {
     case Match(rows, sen) =>
+      println("Entering Pattern matching: " + rows(0))
       val result = patternSearching(sen)
       filePrinter ! Print(rows :+ sen.toString, result)
   }
@@ -27,7 +28,6 @@ class TregexActor(timer: ActorRef, filePrinter: ActorRef) extends Actor with Act
 
   def search(patterns: List[String], tree: Tree) = {
     val stats =  Array.fill[Int](patterns.size)(0)
-    println("Entering Pattern matching")
 
     for (i <- 0 to patterns.size - 1) {
       val searchPattern = TregexPattern.compile(patterns(i))

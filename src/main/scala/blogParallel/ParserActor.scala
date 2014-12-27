@@ -14,17 +14,17 @@ class ParserActor(timer: ActorRef, tregexActor: ActorRef, lp: LexicalizedParser)
 
   def receive = {
     case Parse(name, sen) =>
-      val parsedSentence = PCFGparsing(sen)
+      val parsedSentence = PCFGparsing(name, sen)
       //break up name
       val segs = name.split("""\.""")
       //start to call TregexActor
       tregexActor ! Match(segs.dropRight(1).toList :+ sen, parsedSentence)
   }
 
-  def PCFGparsing(row: String):Tree = {
+  def PCFGparsing(name: String, row: String):Tree = {
     import TwitterRegex._
 
-    println("parsing starts: "+ row)
+    println("parsing starts: "+ name)
 
     val wordsList = row.split("\\s+")
     val cleanedSentence = (for (word <- wordsList if !word.contains("#") && !word.contains("@")) yield word).mkString(" ").replaceAll(searchPattern.toString(), "")
