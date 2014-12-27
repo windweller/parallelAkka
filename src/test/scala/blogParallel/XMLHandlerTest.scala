@@ -24,4 +24,13 @@ class XMLHandlerTest extends FlatSpec{
     }
   }
 
+  "XMLExtract function" should "generate a right Hashmap" in {
+    val result = extractXML("E:\\Jason\\blogs_test")
+    assume(result.get("11253.male.26.Technology.Aquarius.xml").isDefined)
+
+    assertResult("14,July,2004", "Date should be: '20,July,2004' ") {
+      result.get("11253.male.26.Technology.Aquarius.xml").get(1)._1
+    }
+  }
+
 }

@@ -4,6 +4,7 @@ import akka.actor._
 import com.github.tototoshi.csv.CSVWriter
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import java.io.File
+import XMLHandler._
 
 import scala.io.Source
 
@@ -28,23 +29,27 @@ object Entry extends App{
   val listOfTregexActors = (0 to 5).map(m => system.actorOf(Props(new TregexActor(timer, filePrinter)), "TregexActor" + m))
   val listOfParsers = (0 to 5).map(n => system.actorOf(Props(new ParserActor(timer, listOfTregexActors(n), lp)), "ParserActor" + n))
 
-  val file = scala.io.Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8") //300mb in memory now
-
-//  timer ! TotalTask(3386)
-  timer ! TotalTask(16)
+  timer ! TotalTask(3386)
 
   /* Execution Phase */
 
-  Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV.csv"), List("id", "gender", "age", "occupation", "star_sign", "blog_entry", "parsed"))
+  Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV.csv"), List("id", "gender", "age", "occupation", "star_sign", "date", "blog_entry", "parsed"))
+  val listOfFiles = extractXML("E:\\Jason\\blogs_test")
+
+
+
+  //  val file = scala.io.Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8") //300mb in memory now
+
+
 
   //legacy code, delete it
-  var lineCount = 0
-  for (line <- Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8").getLines()) {
-      val segs = line.split("\t")
-      if (segs.length > 2) error ! Warning("this line contains tab space inside sentences: " + segs(0))
-      listOfParsers(lineCount % 6) ! Parse(segs(0), segs(1))
-      lineCount += 1
-  }
+//  var lineCount = 0
+//  for (line <- Source.fromFile("E:\\Jason\\blogs_sample.tab", "UTF-8").getLines()) {
+//      val segs = line.split("\t")
+//      if (segs.length > 2) error ! Warning("this line contains tab space inside sentences: " + segs(0))
+//      listOfParsers(lineCount % 6) ! Parse(segs(0), segs(1))
+//      lineCount += 1
+//  }
 
 
 }
