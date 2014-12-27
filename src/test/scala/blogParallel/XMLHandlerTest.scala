@@ -6,14 +6,16 @@ import java.io.File
 
 class XMLHandlerTest extends FlatSpec{
 
+  val xmlHandler = XMLHandler("E:\\Jason\\blogs_test")
+
   "A NIO Traversal Function" should "get files" in {
-    val files = nioTraverseDir("E:\\Jason\\blogs")
-    assertResult(3385, "Should be 3385 files") {files.length}
+    val files = xmlHandler.nioTraverseDir()
+    assertResult(14, "Should be 14 files") {files.length}
   }
 
   "A XML info generation function" should "extract information in right order" in {
     val file = new File("E:\\Jason\\blogs\\11253.male.26.Technology.Aquarius.xml")
-    val result = generateInfo(file)
+    val result = xmlHandler.generateInfo(file)
 
     assertResult("14,July,2004", "Date should be: '20,July,2004' ") {
       result(1)._1
@@ -24,8 +26,12 @@ class XMLHandlerTest extends FlatSpec{
     }
   }
 
+  "totalNumOfEntry" should "be right number" in {
+    assert(xmlHandler.totalNumOfEntry == 7)
+  }
+
   "XMLExtract function" should "generate a right Hashmap" in {
-    val result = extractXML("E:\\Jason\\blogs_test")
+    val result = xmlHandler.extractXML()
     assume(result.get("11253.male.26.Technology.Aquarius.xml").isDefined)
 
     assertResult("14,July,2004", "Date should be: '20,July,2004' ") {

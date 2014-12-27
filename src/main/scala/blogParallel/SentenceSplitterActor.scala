@@ -3,17 +3,14 @@ package blogParallel
 import java.io.StringReader
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
-import edu.stanford.nlp.ling.HasWord
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import edu.stanford.nlp.process.DocumentPreprocessor
 import FolderReadingNIO.CollectionHandler
 
-import scala.collection.mutable.ListBuffer
-
-class SentenceSplitterActor(parserActor: ActorRef, timer: ActorRef,
-                            tregexActor: ActorRef, lp: LexicalizedParser) extends Actor with ActorLogging {
+class SentenceSplitterActor(parserActor: ActorRef, timer: ActorRef) extends Actor with ActorLogging {
 
   import SentenceSplitterMsg._
+  import ParserActorMsg._
 
   def receive = {
     case Post(fileName, date, rawPost) =>
@@ -27,8 +24,8 @@ class SentenceSplitterActor(parserActor: ActorRef, timer: ActorRef,
         sentences.add(it.next())
       }
 
+      parserActor ! Parse(fileName, date, sentences)
   }
-
 }
 
 object SentenceSplitterMsg {

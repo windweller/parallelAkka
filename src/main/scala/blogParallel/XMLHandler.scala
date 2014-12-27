@@ -5,17 +5,18 @@ import java.io.{FileInputStream, File}
 import scala.collection.immutable.HashMap
 import scala.xml._
 
-object XMLHandler {
+case class XMLHandler(loc: String) {
   //the goal is to extract XML content
   //pair up three info:
+
+  var totalNumOfEntry = 0
 
   /**
    * Extract FileName/blogger_info: (Date, EntryContent)
    * Has to be mutable concerning the speed/efficiency
-   * @param loc directory location
    */
-  def extractXML(loc: String): HashMap[String, List[(String, String)]] = {
-    val fileList = nioTraverseDir(loc)
+  def extractXML(): HashMap[String, List[(String, String)]] = {
+    val fileList = nioTraverseDir()
 
     fileList.foldLeft(HashMap[String, List[(String, String)]]()) { (map, file) =>
       map.updated(file.getName, generateInfo(file))
@@ -27,10 +28,10 @@ object XMLHandler {
     val dateList = file \ "date"
     val entryList = file \ "post"
 
-    (0 to dateList.length - 1).map{n => (dateList(n).text.trim, entryList(n).text.trim)}.toList
+    (0 to dateList.length - 1).map{n => totalNumOfEntry += 1; (dateList(n).text.trim, entryList(n).text.trim)}.toList
   }
 
-  def nioTraverseDir(loc: String): List[File] = {
+  def nioTraverseDir(): List[File] = {
     import scala.collection.JavaConversions._
 
     val directoryStream : DirectoryStream[Path] = Files.newDirectoryStream(Paths.get(loc))

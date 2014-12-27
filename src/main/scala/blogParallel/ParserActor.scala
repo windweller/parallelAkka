@@ -1,12 +1,13 @@
 package blogParallel
 
+import java.util
+
+import FolderReadingNIO.CollectionHandler
 import TwitterLinear.TwitterRegex
 import akka.actor.{ActorRef, ActorLogging, Actor}
-import edu.stanford.nlp.ling.HasWord
+import edu.stanford.nlp.ling.{Word, HasWord}
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import edu.stanford.nlp.trees.Tree
-
-import scala.collection.mutable.ListBuffer
 
 
 class ParserActor(timer: ActorRef, tregexActor: ActorRef, lp: LexicalizedParser) extends Actor with ActorLogging {
@@ -21,8 +22,8 @@ class ParserActor(timer: ActorRef, tregexActor: ActorRef, lp: LexicalizedParser)
 
       val parsedSentence = PCFGparsing(name, sen)
       //break up name
-      val segs = name.split("""\.""").dropRight(1).toList
-      val sentenceList = constructStringFromHasWord(sen)
+      val segs = name.split("""\.""").dropRight(1).toList :+ date
+      val sentenceList = CollectionHandler.buildListStringFromListHasWord(sen)
 
       (0 to sentenceList.length - 1).map{ n =>
         tregexActor ! Match(segs :+ sentenceList(n), parsedSentence(n))
@@ -30,53 +31,36 @@ class ParserActor(timer: ActorRef, tregexActor: ActorRef, lp: LexicalizedParser)
 
   }
 
-  def constructStringFromHasWord(sentences: java.util.List[java.util.List[HasWord]]): ListBuffer[String] = {
-    val it = sentences.iterator()
-    val sentenceList = ListBuffer[String]()
-    while (it.hasNext) {
-      val sentenceSb = new StringBuilder()
-      val sentence = it.next()
-      for (token: HasWord <- sentence) {
-        if(sentenceSb.length > 1) {
-          sentenceSb.append(" ")
-        }
-        sentenceSb.append(token)
-      }
-      sentenceList += sentenceSb.toString()
-    }
-
-    sentenceList
-  }
-
   def PCFGparsing(name: String, sentences: java.util.List[java.util.List[HasWord]]): java.util.List[Tree] = {
-
 
     println("parsing starts: "+ name)
 
+    val cleanedSentences = new java.util.ArrayList[java.util.List[HasWord]]()
+
     val it = sentences.listIterator()
-    while (it.hasNext) { cleanSentence(it.next()) }
+    while (it.hasNext) { cleanedSentences.add(cleanSentence(it.next())) }
 
     timer ! PCFGAddOne
-    lp.parseMultiple(sentences, 4)
+    lp.parseMultiple(cleanedSentences, 3)
   }
 
   /**
    * This very unfortunately is an state-changing funciton
    * @param sentences accept java.util.List[HasWord]
    */
-  def cleanSentence(sentences: java.util.List[HasWord]): Unit = {
+  def cleanSentence(sentences: java.util.List[HasWord]): java.util.List[HasWord] = {
     import TwitterRegex._
+
+    val cleanedSentences = new java.util.ArrayList[HasWord]()
 
     val it = sentences.listIterator()
     while (it.hasNext) {
       val ref = it.next()
-      if (ref.word().contains("#") || ref.word().contains("@") || ref.word().matches(searchPattern.toString())) {
-        sentences.remove(ref)
-      }
-      else {
-        ref.setWord(ref.word().toLowerCase)
+      if (!ref.word().contains("#") && !ref.word().contains("@") && !ref.word().matches(searchPattern.toString())) {
+        cleanedSentences.add(new Word(ref.word().toLowerCase))
       }
     }
+    cleanedSentences
   }
 
 }
