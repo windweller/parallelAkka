@@ -37,13 +37,16 @@ class ParserActor(timer: ActorRef, tregexActor: ActorRef, lp: LexicalizedParser)
 
     println("parsing starts: "+ name)
 
-    val cleanedSentences = new java.util.ArrayList[java.util.List[HasWord]]()
+    var cleanedSentences = new java.util.ArrayList[java.util.List[HasWord]]()
 
     val it = sentences.listIterator()
     while (it.hasNext) { cleanedSentences.add(cleanSentence(it.next())) }
 
     timer ! PCFGAddOne
-    lp.parseMultiple(cleanedSentences, 3)
+    val result = lp.parseMultiple(cleanedSentences, 4)
+
+    cleanedSentences = null
+    result
   }
 
   /**

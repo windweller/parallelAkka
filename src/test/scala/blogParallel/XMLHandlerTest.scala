@@ -1,16 +1,16 @@
 package blogParallel
 
 import org.scalatest.FlatSpec
-import blogParallel.XMLHandler._
+import blogParallel.FileHandler._
 import java.io.File
 
 class XMLHandlerTest extends FlatSpec{
 
-  val xmlHandler = XMLHandler("E:\\Jason\\blogs_test")
+  val xmlHandler = FileHandler("E:\\Jason\\blogs_test")
 
   "A NIO Traversal Function" should "get files" in {
     val files = xmlHandler.nioTraverseDir()
-    assertResult(14, "Should be 14 files") {files.length}
+    assertResult(6, "Should be 6 files") {files.length}
   }
 
   "A XML info generation function" should "extract information in right order" in {

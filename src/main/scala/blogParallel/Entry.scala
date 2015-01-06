@@ -1,47 +1,101 @@
 package blogParallel
 
 import akka.actor._
-import com.github.tototoshi.csv.CSVWriter
+import com.typesafe.config.{Config, ConfigFactory}
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import java.io.File
 
-import scala.io.Source
+import edu.stanford.nlp.trees.tregex.TregexPattern
+
 
 //You need at least 60GB memory to run this program
-object Entry extends App{
+object Entry{
   import SentenceSplitterMsg._
-  import ErrorMsg._
   import TimerMsg._
+  import Pattern._
 
-  /* Initialization Phase */
+  /**
+   * Main method to pass in command line arguments
+   * It takes 1 argument: serialId
+   * @param args sbt "run --flag"
+   */
+  def main(args: Array[String]) {
 
-  val timerLoc = "E:\\Allen\\timer.txt"
+//    println(args.toList)
+//    Utility.breakDocs(6, "E:\\Jason\\blogs", "E:\\Jason\\blogs_multi")
 
-  val system: ActorSystem = ActorSystem("Twitter")
-  val timer = system.actorOf(Props(new TimerActor(timerLoc)), "Timer")
-  val error = system.actorOf(Props(new ErrorActor("E:\\Allen\\Error.txt")), "Error")
-  val filePrinter = system.actorOf(Props(new FilePrintActor(new File("E:\\Jason\\blogFinishedCSV.csv"))), "filePrinter")
+      if (args(0) != "-serialId") {println("first flag must be '-serialId'"); System.exit(0)}
 
-  val lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz", "-MAX_ITEMS","500000") //, "-nthreads", "5"
+      val range = Utility.getBreakChunks("E:\\Jason\\blogs_multi")
+      val args1 = args(1).toInt
 
-  val listOfTregexActors = (0 to 5).map(m => system.actorOf(Props(new TregexActor(timer, filePrinter)), "TregexActor" + m))
-  val listOfParsers = (0 to 5).map(n => system.actorOf(Props(new ParserActor(timer, listOfTregexActors(n), lp)), "ParserActor" + n))
-  val listOfSentenceSplitters = (0 to 5).map(j => system.actorOf(Props(new SentenceSplitterActor(listOfParsers(j), timer)), "SplitActor" + j))
+      if (args1 < 0 || args1 > range) {
+        println("Inserted sreialId goes beyond acceptable range: " + range)
+        System.exit(0)
+      }
 
-  Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV.csv"), List("id", "gender", "age", "occupation", "star_sign", "date", "blog_entry", "parsed"))
-  val xmlHandler = XMLHandler("E:\\Jason\\blogs_test")
-
-  /* Execution Phase */
-  val listOfFiles = xmlHandler.extractXML()
-  timer ! TotalTask(xmlHandler.totalNumOfEntry)
-
-  var entryCount = 0
-  listOfFiles.map{ ft =>
-    ft._2.map{ eachEntry =>
-      listOfSentenceSplitters(entryCount % 6) ! Post(ft._1, eachEntry._1, eachEntry._2)
-      entryCount += 1
-    }
+//      SingleThread(args1).startSingleThread()
+      start(args1)
   }
+
+  def start(serialId: Int): Unit = {
+    /* Initialization Phase */
+
+    val timerLoc = "E:\\Allen\\timer" + serialId + ".txt"
+
+    val conf: Config = ConfigFactory.load()
+    val system: ActorSystem = ActorSystem("Blog", conf) //added actor logging info
+
+    val timer = system.actorOf(Props(classOf[TimerActor], timerLoc), name = "Timer")
+
+    val error = system.actorOf(Props(classOf[ErrorActor], "E:\\Allen\\Error" + serialId + ".txt"), name = "Error")
+
+    val filePrinter = system.actorOf(Props(classOf[FilePrintActor], new File("E:\\Jason\\blogFinishedCSV" + serialId + ".csv")), name = "filePrinter")
+
+    val lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz", "-MAX_ITEMS","500000") //, "-nthreads", "5"
+
+    val futureCompiledPattern = for (pattern <- patternFuture) yield TregexPattern.compile(pattern)
+    val pastCompiledPattern = for (pattern <- patternsPast) yield TregexPattern.compile(pattern)
+
+    /* Uncomment for concurrency */
+//    val listOfTregexActors = (0 to 5).map(m =>
+//          system.actorOf(Props(classOf[TregexActor], timer, filePrinter, futureCompiledPattern, pastCompiledPattern), name = "TregexActor" + m))
+//
+//    val listOfParsers = (0 to 5).map(n =>
+//          system.actorOf(Props(classOf[ParserActor], timer, listOfTregexActors(n), lp), name = "ParserActor" + n))
+//
+//    val listOfSentenceSplitters = (0 to 5).map(j =>
+//          system.actorOf(Props(classOf[SentenceSplitterActor], listOfParsers(j), timer), name = "SplitActor" + j))
+
+    val tregexActor = system.actorOf(Props(classOf[TregexActor], timer, filePrinter, futureCompiledPattern, pastCompiledPattern), name = "TregexActor")
+    val parserActor = system.actorOf(Props(classOf[ParserActor], timer, tregexActor, lp), name = "ParserActor")
+    val sentenceActor = system.actorOf(Props(classOf[SentenceSplitterActor], parserActor, timer), name = "SplitActor")
+
+    Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV"  + serialId + ".csv"), List("id", "gender", "age", "occupation", "star_sign", "date", "blog_entry", "parsed"))
+
+    val xmlHandler = FileHandler("E:\\Jason\\blogs_multi\\" + serialId)
+
+    /* Execution Phase */
+    val listOfFiles = xmlHandler.extractXML()
+
+    timer ! TotalTask(xmlHandler.totalNumOfEntry)
+    listOfFiles.map{ ft =>
+      ft._2.map{ eachEntry =>
+        sentenceActor ! Post(ft._1, eachEntry._1, eachEntry._2)
+      }
+    }
+
+
+    /* Uncomment for concurrency */
+//    var entryCount = 0
+//    listOfFiles.map{ ft =>
+//      ft._2.map{ eachEntry =>
+//        listOfSentenceSplitters(entryCount % 6) ! Post(ft._1, eachEntry._1, eachEntry._2)
+//        entryCount += 1
+//      }
+//    }
+  }
+
 
 }
 

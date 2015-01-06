@@ -4,7 +4,8 @@ import akka.actor.{ActorRef, ActorLogging, Actor}
 import edu.stanford.nlp.trees.Tree
 import edu.stanford.nlp.trees.tregex.TregexPattern
 
-class TregexActor(timer: ActorRef, filePrinter: ActorRef) extends Actor with ActorLogging {
+class TregexActor(timer: ActorRef, filePrinter: ActorRef,
+                  future: List[TregexPattern], past: List[TregexPattern]) extends Actor with ActorLogging {
 
   import TregexMsg._
   import TimerMsg._
@@ -19,18 +20,17 @@ class TregexActor(timer: ActorRef, filePrinter: ActorRef) extends Actor with Act
   }
 
   def patternSearching(tree: Tree):List[Array[Int]] = {
-    val statsFuture = search(patternFuture, tree)
-    val statsPast = search(patternsPast, tree)
+    val statsFuture = search(future, tree)
+    val statsPast = search(past, tree)
 
     List(statsFuture, statsPast)
   }
 
-  def search(patterns: List[String], tree: Tree) = {
+  def search(patterns: List[TregexPattern], tree: Tree) = {
     val stats =  Array.fill[Int](patterns.size)(0)
 
     for (i <- 0 to patterns.size - 1) {
-      val searchPattern = TregexPattern.compile(patterns(i))
-      val matcher = searchPattern.matcher(tree)
+      val matcher = patterns(i).matcher(tree)
       if (matcher.find()) {
         stats(i) = stats(i) + 1
       }

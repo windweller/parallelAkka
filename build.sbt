@@ -10,7 +10,7 @@ scalaVersion := "2.10.2"
 mainClass in (Compile, run) := Some("blogParallel.Entry")
 
 val buildSettings = Defaults.defaultSettings ++ Seq(
-  javaOptions += "-Xmx2G -Xms4G"
+  javaOptions += "-agentlib:hprof=heap=sites"
 )
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.2.1",
   "com.typesafe.akka" %% "akka-testkit" % "2.2.1",
   "com.typesafe.akka" %% "akka-slf4j" % "2.3.2",
+  "ch.qos.logback" % "logback-classic" % "1.1.2",
   "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.3",
   "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
@@ -40,6 +41,7 @@ libraryDependencies ++= Seq(
   //Semantic Role Labeling
   "com.clearnlp" % "clearnlp-general-en-srl" % "1.1"
 )
+
 
 
 unmanagedJars in Compile := (baseDirectory.value ** "*.jar").classpath

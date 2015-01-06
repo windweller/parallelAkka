@@ -5,7 +5,7 @@ import java.io.{FileInputStream, File}
 import scala.collection.immutable.HashMap
 import scala.xml._
 
-case class XMLHandler(loc: String) {
+case class FileHandler(loc: String) {
   //the goal is to extract XML content
   //pair up three info:
 
@@ -16,7 +16,8 @@ case class XMLHandler(loc: String) {
    * Has to be mutable concerning the speed/efficiency
    */
   def extractXML(): HashMap[String, List[(String, String)]] = {
-    val fileList = nioTraverseDir()
+
+    val fileList = nioTraverseDir[File]((path) => path.toFile)
 
     fileList.foldLeft(HashMap[String, List[(String, String)]]()) { (map, file) =>
       map.updated(file.getName, generateInfo(file))
@@ -31,11 +32,11 @@ case class XMLHandler(loc: String) {
     (0 to dateList.length - 1).map{n => totalNumOfEntry += 1; (dateList(n).text.trim, entryList(n).text.trim)}.toList
   }
 
-  def nioTraverseDir(): List[File] = {
+  def nioTraverseDir[A](transform: (Path) => A): List[A] = {
     import scala.collection.JavaConversions._
 
     val directoryStream : DirectoryStream[Path] = Files.newDirectoryStream(Paths.get(loc))
-    directoryStream.map(path => path.toFile).toList
+    directoryStream.map(path => transform(path)).toList
   }
 
   def loadXML(file: File) = {
