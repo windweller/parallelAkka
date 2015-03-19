@@ -20,6 +20,7 @@ object Evaluation {
 
   //formula is: F / #Fsentence - NotFuture / #NFsentence
   //always left - right
+  //always relative value now
   def compareDIFF(xmlA: XMLtree, xmlB: XMLtree): Map[String, String] = {
 //    val xmlARulesCount = for (rule <- xmlA.xmlTreesToParen(); count <- xmlA.rootCountList) yield (rule, count.get)
     val xmlARules = xmlA.xmlTreesToParen()
@@ -81,14 +82,14 @@ object Evaluation {
      * each file contains the sentence's pattern trees, in parentheses
      * @return
      */
-    def generateLDASentenceMap(): Map[String, List[String]] = {
+    def generateLDASentenceMap(): Map[String, Vector[String]] = {
       //a matrix, the row number will be the number of sentences in total, assuming unknown
       //the column number will be the pattern true, obtained by: treeList.length (same as subtreeList.length)
 
       val parenRules = this.xmlTreesToParen()
 
       var i = -1
-      (Map[String, List[String]]() /: addressList) {
+      (Map[String, Vector[String]]() /: addressList) {
         {(map, sentenceList) =>
             //each sentenceList is one address collection
           val sentences = sentenceList \ "node" \\ "@id"
@@ -97,7 +98,7 @@ object Evaluation {
             (oMap, sentence) =>
               val sentenceArray = sentence.text.split(":")
               val sentenceId = sentenceArray(0) + "_" + sentenceArray(1)
-              oMap + (sentenceId -> oMap.getOrElse(sentenceId, List[String]()).+:(parenRules(i)))
+              oMap + (sentenceId -> oMap.getOrElse(sentenceId, Vector[String]()).+:(parenRules(i)))
           }
         }
       }
@@ -108,20 +109,20 @@ object Evaluation {
      * @param constraintFile must be one of those diff files (abs or rel)
      * @param critera compare value to this criter, true pass, false fail
      */
-    def generateLDASentenceMapWithConstraints(constraintFile: String, critera: Int): Map[String, List[String]] = {
+    def generateLDASentenceMapWithConstraints(constraintFile: String, critera: Int): Map[String, Vector[String]] = {
 
       val reader = CSVReader.open(new File(constraintFile))
       val lines = reader.all()
 
       val patternSelection = (Map[String, Float]() /: lines) {
         (map, line) =>
-          map.updated(line(1), line(0).toFloat)
+          map.updated(line(0), line(1).toFloat)
       }
 
       val parenRules = this.xmlTreesToParen()
 
       var i = -1
-      (Map[String, List[String]]() /: addressList) {
+      (Map[String, Vector[String]]() /: addressList) {
         {(map, sentenceList) =>
           //each sentenceList is one address collection
           val sentences = sentenceList \ "node" \\ "@id"
@@ -132,7 +133,7 @@ object Evaluation {
               val sentenceId = sentenceArray(0) + "_" + sentenceArray(1)
               if (patternSelection.get(parenRules(i)).nonEmpty) {
                 if (patternSelection.get(parenRules(i)).get > 0) {
-                  oMap + (sentenceId -> oMap.getOrElse(sentenceId, List[String]()).+:(parenRules(i)))
+                  oMap + (sentenceId -> oMap.getOrElse(sentenceId, Vector[String]()).+:(parenRules(i)))
                 }
                 else oMap
               }

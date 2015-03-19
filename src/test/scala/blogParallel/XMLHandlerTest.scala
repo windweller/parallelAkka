@@ -8,10 +8,10 @@ class XMLHandlerTest extends FlatSpec{
 
   val xmlHandler = FileHandler("E:\\Jason\\blogs_test")
 
-  "A NIO Traversal Function" should "get files" in {
-    val files = xmlHandler.nioTraverseDir()
-    assertResult(6, "Should be 6 files") {files.length}
-  }
+//  "A NIO Traversal Function" should "get files" in {
+//    val files = xmlHandler.nioTraverseDir()
+//    assertResult(6, "Should be 6 files") {files.length}
+//  }
 
   "A XML info generation function" should "extract information in right order" in {
     val file = new File("E:\\Jason\\blogs\\11253.male.26.Technology.Aquarius.xml")

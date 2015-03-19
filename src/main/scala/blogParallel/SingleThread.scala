@@ -1,8 +1,8 @@
 package blogParallel
 
-import java.io.{StringReader, File}
+import java.io.{FileReader, BufferedReader, StringReader, File}
 
-import FolderReadingNIO.CollectionHandler
+import FolderReadingNIO.{CSVHandler, CollectionHandler}
 import Pattern._
 import blogParallel.FilePrintMsg.Print
 import blogParallel.TimerMsg._
@@ -11,6 +11,7 @@ import akka.actor.{Props, ActorSystem}
 import blogParallel.ParserActorMsg.Parse
 import blogParallel.SentenceSplitterMsg.Post
 import blogParallel.TregexMsg.Match
+import com.github.tototoshi.csv.CSVReader
 import com.typesafe.config.{ConfigFactory, Config}
 import edu.stanford.nlp.ling.{Word, HasWord}
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
@@ -18,42 +19,49 @@ import edu.stanford.nlp.process.DocumentPreprocessor
 import edu.stanford.nlp.trees.Tree
 import edu.stanford.nlp.trees.tregex.TregexPattern
 
-case class SingleThread(serialId: Int) {
+case class SingleThread(inputFile: String, outFile: String, sentenceColumn: Int) {
 
-  val timerLoc = "E:\\Allen\\timer" + serialId + ".txt"
+  val timerLoc = "E:\\Allen\\timer.txt"
 
   val conf: Config = ConfigFactory.load()
   val system: ActorSystem = ActorSystem("Blog", conf) //added actor logging info
 
   val timer = system.actorOf(Props(classOf[TimerActor], timerLoc), name = "Timer")
 
-  val error = system.actorOf(Props(classOf[ErrorActor], "E:\\Allen\\Error" + serialId + ".txt"), name = "Error")
+  val error = system.actorOf(Props(classOf[ErrorActor], "E:\\Allen\\Error.txt"), name = "Error")
 
-  val filePrinter = system.actorOf(Props(classOf[FilePrintActor], new File("E:\\Jason\\blogFinishedCSV" + serialId + ".csv")), name = "filePrinter")
+  val filePrinter = system.actorOf(Props(classOf[FilePrintActor], new File(outFile)), name = "filePrinter")
 
   val lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz", "-MAX_ITEMS","500000") //, "-nthreads", "5"
 
   val futureCompiledPattern = for (pattern <- patternFuture) yield TregexPattern.compile(pattern)
   val pastCompiledPattern = for (pattern <- patternsPast) yield TregexPattern.compile(pattern)
+  val presentCompiledPattern = for (pattern <- patternPresent) yield TregexPattern.compile(pattern)
 
   startSingleThread()
 
   def startSingleThread(): Unit = {
-    Utility.printCSVHeader(new File("E:\\Jason\\blogFinishedCSV"  + serialId + ".csv"), List("id", "gender", "age", "occupation", "star_sign", "date", "blog_entry", "parsed"))
 
-    val xmlHandler = FileHandler("E:\\Jason\\blogs_multi\\" + serialId)
+    val reader = CSVReader.open(new File(inputFile))
+    val lines = reader.all()
 
-    /* Execution Phase */
-    val listOfFiles = xmlHandler.extractXML()
+    Utility.printCSVHeader(new File(outFile), List("sentence_id", "person_id", "sentence", "parsed"))
 
-    timer ! TotalTask(xmlHandler.totalNumOfEntry)
+    timer ! TotalTask(lines.length)
 
-    listOfFiles.map{ ft =>
-      ft._2.map{ eachEntry =>
-         val parse = sentenceSplitterFunc(Post(ft._1, eachEntry._1, eachEntry._2))
-         parseFunc(parse)
-      }
+    for (line <- lines) {
+
+      println(line(sentenceColumn))
+
+      val tree = lp.parse(line(sentenceColumn))
+      timer ! PCFGAddOne
+      val statsFuture = search(futureCompiledPattern, tree)
+      val statsPast = search(pastCompiledPattern, tree)
+      val statsPresent = search(presentCompiledPattern, tree)
+
+      filePrinter ! Print(line.slice(0, 3) :+ tree.toString, List(statsFuture ++ statsPast ++ statsPresent))
     }
+
   }
 
   def sentenceSplitterFunc(post: Post): Parse = {
@@ -73,6 +81,7 @@ case class SingleThread(serialId: Int) {
 
   def parseFunc(parse: Parse): Unit = {
     import scala.collection.JavaConversions._
+
     val parsedSentence = PCFGparsing(parse.name, parse.sen)
     val segs = parse.name.split("""\.""").dropRight(1).toList :+ parse.date
     val sentenceList = CollectionHandler.buildListStringFromListHasWord(parse.sen)

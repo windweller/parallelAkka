@@ -4,26 +4,28 @@ name := """parallel-Akka"""
 
 version := "1.0"
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.11.2"
 
-//mainClass in (Compile, run) := Some("clearNLP.DemoNLPDecode")
-mainClass in (Compile, run) := Some("blogParallel.Entry")
+mainClass in (Compile, run) := Some("DataTransform.Entry")
+//mainClass in (Compile, run) := Some("classification.Main")
 
-val buildSettings = Defaults.defaultSettings ++ Seq(
-  javaOptions += "-agentlib:hprof=heap=sites"
+resolvers ++= Seq(
+  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+  "IESL Release" at "http://dev-iesl.cs.umass.edu/nexus/content/groups/public"
 )
 
-resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+val akkaV = "2.3.6" //2.2.1
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.2.1",
-  "com.typesafe.akka" %% "akka-testkit" % "2.2.1",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.2",
+  "com.typesafe.akka" %% "akka-actor" % akkaV,
+  "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
+  "com.typesafe.akka" %% "akka-slf4j" % akkaV,
+  "com.typesafe.akka" %% "akka-stream-experimental" % "1.0-M4",
   "ch.qos.logback" % "logback-classic" % "1.1.2",
   "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.3",
   "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-  "com.typesafe.slick" %% "slick" % "2.0.1",
+  "com.typesafe.slick" %% "slick" % "2.1.0",
   "mysql" % "mysql-connector-java" % "5.1.12",
   "org.scalaj" %% "scalaj-http" % "0.3.15",
   "com.github.tototoshi" %% "scala-csv" % "1.0.0",
@@ -31,15 +33,20 @@ libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1",
   "commons-cli" % "commons-cli" % "1.2",
   "org.ccil.cowan.tagsoup" % "tagsoup" % "1.2.1",
+  "org.apache.commons" % "commons-csv" % "1.1",
+  "cc.mallet" % "mallet" % "2.0.7-RC2",
+  "cc.factorie" %% "factorie" % "1.1",
+  "com.bizo" % "mighty-csv_2.10" % "0.2",
 //Clear NLP - core
-  "com.clearnlp" % "clearnlp" % "2.0.2",
-  "com.clearnlp" % "clearnlp-dictionary" % "1.0",
+  "edu.emory.clir" % "clearnlp" % "3.0.1",
+  "edu.emory.clir" % "clearnlp-dictionary" % "3.0",
   //Clear NLP - English Dependency Parsing
-  "com.clearnlp" % "clearnlp-general-en-dep" % "1.2",
+  "edu.emory.clir" % "clearnlp-general-en-dep" % "3.1",
   //POS Tagging
-  "com.clearnlp" % "clearnlp-general-en-pos" % "1.1",
-  //Semantic Role Labeling
-  "com.clearnlp" % "clearnlp-general-en-srl" % "1.1"
+  "edu.emory.clir" % "clearnlp-general-en-pos" % "3.1",
+  //machine learning
+  "org.scalanlp" % "nak" % "1.2.1",
+  "tw.edu.ntu.csie" % "libsvm" % "3.17"
 )
 
 

@@ -1,16 +1,18 @@
 package blogParallel
 
-import java.io.File
+import java.io.{FileReader, BufferedReader, File}
 import java.nio.file.{DirectoryStream, Paths, Files, Path}
 
 import com.github.tototoshi.csv.CSVWriter
 import Pattern._
 
+import scala.collection.mutable.ListBuffer
+
 object Utility {
 
   def printCSVHeader(f: File, headers: List[String]) {
     val writer = CSVWriter.open(f, append = false)
-    writer.writeRow(headers:::patternFuture:::patternsPast)
+    writer.writeRow(headers:::patternFuture:::patternsPast:::patternPresent)
     writer.close()
   }
 
@@ -37,6 +39,15 @@ object Utility {
     val directoryStream : DirectoryStream[Path] = Files.newDirectoryStream(Paths.get(source))
 
     directoryStream.toList.length
+  }
+
+  //quickly count lines of a CSV file without truly reading it
+  def countCSVLines(loc: String): Int = {
+    val reader = new BufferedReader(new FileReader(loc))
+    var lines = 0
+    while (reader.readLine() != null) lines += 1
+    reader.close()
+    lines
   }
 
 }
