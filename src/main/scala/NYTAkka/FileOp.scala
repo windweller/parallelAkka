@@ -17,7 +17,7 @@ object FileOp {
   //border: mark where number vectors begin
   //printRow is a partially applied function
   //collapse is also partially applied (border)
-  def compress(fileIterator: FileIterator, keyCol: Int, pageCol: Option[Int], printRow: ((String, Array[Int])) => Future[Unit],
+  def compress(fileIterator: FileIterator, keyCol: Int, pageCol: Option[Int], printRow: ((String, Array[Int])) => Unit,
                convert: (Array[String]) => (ArrayBuffer[String], ArrayBuffer[Int])): Unit = {
 
     val acc = ArrayBuffer[ArrayBuffer[Int]]()
@@ -28,8 +28,8 @@ object FileOp {
     while (fileIterator.hasNext) {
       currentLine += 1
       if (currentLine % 100 == 0) printToTimer(currentLine)
-
-      val line = convert(fileIterator.next().split("\t"))
+      val rawline = fileIterator.next().split("\t")
+      val line = convert(rawline)
 
       if (line._1(keyCol) != key && acc.nonEmpty) {
         printRow(key+"\t"+page, collapse(acc))
@@ -47,15 +47,16 @@ object FileOp {
 
     //when Iterator ended, we print out remaining stuff
     if (acc.nonEmpty)
-      printRow(key, collapse(acc))
+      printRow(key+"\t"+page, collapse(acc))
 
   }
 
   def collapse(all: ArrayBuffer[ArrayBuffer[Int]]): Array[Int] = {
-    all.reduce{(first, second) =>
-     first.zipWithIndex.map {e =>
-       e._1 + (if (e._2 >= second.length) 0 else second(e._2))
-     }
+    all.reduce{(first, second) => {
+      first.zipWithIndex.map {e =>
+        e._1 + second(e._2)
+      }
+    }
     }.toArray
   }
 
@@ -96,7 +97,7 @@ object FileOp {
     Files.write(outByPage, ((Array("PageID") ++ patternFuture ++ patternsPast ++ patternPresent).mkString("\t")+"\r\n").getBytes, CREATE, APPEND)
   }
 
-  def printToFile(out: Path, res: (String, Array[Int])): Future[Unit] = Future {
+  def printToFile(out: Path, res: (String, Array[Int])): Unit = {
     Files.write(out, (res._1+"\t"+res._2.mkString("\t")+"\r\n").getBytes, CREATE, APPEND)
   }
 

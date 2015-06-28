@@ -23,6 +23,7 @@ public class VarroXMLReaderTest {
 
     @Test
     public void testParse() throws Exception {
+
         long st = System.currentTimeMillis();
 
         VarroXMLReader reader = new VarroXMLReader();

@@ -75,6 +75,7 @@ case class Start(corpus: String) {
 
     val byPageSink = Sink.foreach[(Array[String], Array[Int])](e => e)
 
+
     val materialized = FlowGraph.closed(bySentenceSink, byParagraphSink)((_, _)) { implicit builder =>
       (bySenSink, byParaSink) =>
       import FlowGraph.Implicits._
@@ -125,81 +126,82 @@ case class Start(corpus: String) {
 
   var currentLine = 0.0
   def sentenceSink(res: (Array[String], Array[Int])): Unit = {
-    printToFile(outBySen, (res._1.mkString("\t"), res._2))
+    printToFile(outBySen, (res._1.mkString("\t"), res._2.mkString("\t")))
     currentLine += 1
     if (currentLine % 100 == 0)
       printToTimer(currentLine)
   }
 
   //it saves and cleans
-  val paragraphCol = 1
-  val pageCol = 2
-  val currentTotalPara = ListBuffer[(Array[String], Array[Int])]()
-  var currentParaID = ""
+//  val paragraphCol = 1
+//  val pageCol = 2
+//  val currentTotalPara = ListBuffer[(Array[String], Array[Int])]()
+//  var currentParaID = ""
 
   //Array(SentenceID, Parag, Page, rawSentence, parsedSentence), Array(Matches)
-  def paragraphSink(res: (Array[String], Array[Int]), fileIterator: FileIterator): Unit = {
+//  def paragraphSink(res: (Array[String], Array[Int]), fileIterator: FileIterator): Unit = {
+//
+//    if (!fileIterator.hasNext) {
+//      printToFile(outByPara, currentTotalPara.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
+//        (n._1(paragraphCol) + "\t" + n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
+//          if (acc._2.isEmpty) nn._1
+//          else nn._1 + acc._2(nn._2)
+//        })
+//      })
+//      currentTotalPara.clear()
+//    }
+//    else if (currentParaID != res._1(paragraphCol) && currentTotalPara.nonEmpty) {
+//      printToFile(outByPara, currentTotalPara.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
+//        (n._1(paragraphCol) + "\t" + n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
+//          if (acc._2.isEmpty) nn._1
+//          else nn._1 + acc._2(nn._2)
+//        })
+//      })
+//      currentTotalPara.clear()
+//      paragraphSink(res, fileIterator) //pass it back in
+//    }
+//    else { //when currentTotalPara is empty or ID don't match, we override ID
+//      currentParaID = res._1(paragraphCol)
+//      currentTotalPara += res
+//    }
+//  }
 
-    if (!fileIterator.hasNext) {
-      printToFile(outByPara, currentTotalPara.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
-        (n._1(paragraphCol) + "\t" + n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
-          if (acc._2.isEmpty) nn._1
-          else nn._1 + acc._2(nn._2)
-        })
-      })
-      currentTotalPara.clear()
-    }
-    else if (currentParaID != res._1(paragraphCol) && currentTotalPara.nonEmpty) {
-      printToFile(outByPara, currentTotalPara.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
-        (n._1(paragraphCol) + "\t" + n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
-          if (acc._2.isEmpty) nn._1
-          else nn._1 + acc._2(nn._2)
-        })
-      })
-      currentTotalPara.clear()
-      paragraphSink(res, fileIterator) //pass it back in
-    }
-    else { //when currentTotalPara is empty or ID don't match, we override ID
-      currentParaID = res._1(paragraphCol)
-      currentTotalPara += res
-    }
-  }
-
-  val currentTotalPage = ListBuffer[(Array[String], Array[Int])]()
-  var currentPageID = ""
-  def pageSink(res: (Array[String], Array[Int]), fileIterator: FileIterator): Unit = {
-
-    if (!fileIterator.hasNext) {
-      printToFile(outByPage, currentTotalPage.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
-        (n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
-          if (acc._2.isEmpty) nn._1
-          else nn._1 + acc._2(nn._2)
-        })
-      })
-      currentTotalPage.clear()
-    }
-    else if (currentPageID != res._1(pageCol) && currentTotalPage.nonEmpty) {
-      printToFile(outByPage, currentTotalPage.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
-        println(n._1.mkString(" "))
-        (n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
-          if (acc._2.isEmpty) nn._1
-          else nn._1 + acc._2(nn._2)
-        })
-      })
-      currentTotalPage.clear()
-      paragraphSink(res, fileIterator) //pass it back in
-    }
-    else { //when currentTotalPara is empty or ID don't match, we override ID
-      currentPageID = res._1(pageCol)
-      currentTotalPage += res
-    }
-  }
+//  val currentTotalPage = ListBuffer[(Array[String], Array[Int])]()
+//  var currentPageID = ""
+//  def pageSink(res: (Array[String], Array[Int]), fileIterator: FileIterator): Unit = {
+//
+//    if (!fileIterator.hasNext) {
+//      printToFile(outByPage, currentTotalPage.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
+//        (n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
+//          if (acc._2.isEmpty) nn._1
+//          else nn._1 + acc._2(nn._2)
+//        })
+//      })
+//      currentTotalPage.clear()
+//    }
+//    else if (currentPageID != res._1(pageCol) && currentTotalPage.nonEmpty) {
+//      printToFile(outByPage, currentTotalPage.foldLeft[(String, Seq[Int])](("", Seq[Int]())){(acc, n) =>
+//        println(n._1.mkString(" "))
+//        (n._1(pageCol) + "\t", n._2.zipWithIndex.map {nn =>
+//          if (acc._2.isEmpty) nn._1
+//          else nn._1 + acc._2(nn._2)
+//        })
+//      })
+//      currentTotalPage.clear()
+//      paragraphSink(res, fileIterator) //pass it back in
+//    }
+//    else { //when currentTotalPara is empty or ID don't match, we override ID
+//      currentPageID = res._1(pageCol)
+//      currentTotalPage += res
+//    }
+//  }
 
 
   //before printing, print the head
-  def printToFile(out: Path, res: (String, Seq[Int])): Future[Unit] = Future {
-    Files.write(out, (res._1+res._2.mkString("\t")+"\r\n").getBytes, CREATE, APPEND)
+  def printToFile(out: Path, res: (String, String)): Unit = {
+    Files.write(out, (res._1+ "\t" +res._2+"\r\n").getBytes, CREATE, APPEND)
   }
+
 
   //this signifies order or header: Array(SentenceID, Parag, Page, rawSentence, parsedSentence), Array(Matches)
   //correct way: printHeader(Some(Array(0,3,4,1,2)))

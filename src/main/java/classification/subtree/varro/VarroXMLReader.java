@@ -73,7 +73,6 @@ public class VarroXMLReader {
 
             oddeven++;
         }
-
     }
 
     //we'll see what's this processing

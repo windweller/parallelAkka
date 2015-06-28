@@ -9,8 +9,8 @@ import java.nio.ByteBuffer
 object StreamTest extends App {
 
 
-  val file = FileIterator("E:\\Allen\\NYTFuture\\NYT_sample", header = true)
-  Start("E:\\Allen\\NYTFuture\\NYT_sample").stream(file)
+  val file = FileIterator("E:\\Allen\\NYTFuture\\NYT", header = true)
+  Start("E:\\Allen\\NYTFuture\\NYT").stream(file)
 
 
 }
